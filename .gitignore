@@ -1,0 +1,6 @@
+.vscode/
+__pycache__/
+venv/
+sudoku.csv
+quizzes.npy
+solutions.npy
