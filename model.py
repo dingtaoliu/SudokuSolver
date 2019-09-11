@@ -2,6 +2,12 @@ import tensorflow as tf
 
 def cnn_model_fn(features, labels, mode):
     input_layer = tf.reshape(features["x"], [-1, 9, 9, 1])
+    labels = tf.reshape(labels, [-1, 9, 9, 1])
+    print("######################################")
+    print(input_layer.shape)
+    print(labels.shape)
+    print("#######################################")
+
 
     conv1 = tf.layers.conv2d(
         inputs=input_layer,
@@ -11,28 +17,42 @@ def cnn_model_fn(features, labels, mode):
         activation=tf.nn.relu
     )
 
-    pool1 = tf.layers.max_pooling2d(
-        inputs=conv1, 
-        pool_size=[2, 2], 
-        strides=1
-    )
+    # pool1 = tf.layers.max_pooling2d(
+    #     inputs=conv1, 
+    #     pool_size=[2, 2], 
+    #     strides=1
+    # )
 
     conv2 = tf.layers.conv2d(
-        inputs=pool1,
+        inputs=conv1,
         filters=32,
         kernel_size=[3, 3],
         padding="same",
         activation=tf.nn.relu
     )
 
+    output = tf.layers.conv2d(
+        inputs=conv1,
+        filters=1,
+        kernel_size=[1, 1],
+        padding="same",
+        activation=tf.nn.relu
+    )
+
     predictions = {
-        "solutions": conv2
+        "solutions": output
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-    loss = tf.losses.absolute_difference(labels, predictions)
+
+    print("######################################")
+    print(output.shape)
+    print(labels.shape)
+    print("#######################################")
+
+    loss = tf.losses.absolute_difference(labels, output)
 
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
