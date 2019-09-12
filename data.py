@@ -20,7 +20,7 @@ def csv_to_npy(filename):
 def load_data():
     x = np.load('quizzes.npy')
     y = np.load('solutions.npy')
-    return x.astype(float), y.astype(float)
+    return x[10:].astype(float), y[10:].astype(float), x[:10].astype(float), y[:10].astype(float)
 
 def train_input_fn(x, y, batch_size):
     dataset = tf.data.Dataset.from_tensor_slices((x, y))

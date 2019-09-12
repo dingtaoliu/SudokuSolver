@@ -4,3 +4,4 @@ venv/
 sudoku.csv
 quizzes.npy
 solutions.npy
+model_output/
