@@ -1,72 +1,35 @@
 import tensorflow as tf 
 
-def cnn_model_fn(features, labels, mode):
+from data import *
+import sklearn.model_selection as ms
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(9, 9, 1)),
+    # tf.keras.layers.BatchNormalization(),
+    # tf.keras.layers.Conv2D(64, (5, 5), activation='relu', padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Conv2D(128, (1, 1), activation='relu', padding='same'),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(81 * 9),
+    tf.keras.layers.Reshape((-1, 9)),
+    tf.keras.layers.Activation('softmax')
+])
 
 
-    input_layer = tf.reshape(features["x"], [-1, 9, 9, 1])
-    
 
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-    conv1 = tf.layers.conv2d(
-        inputs=input_layer,
-        filters=32,
-        kernel_size=[3, 3],
-        padding="same",
-        activation=tf.nn.relu
-    )
+x = np.load('quizzes.npy').reshape(-1, 9, 9, 1)
+y = np.load('solutions.npy').reshape(-1, 81, 1)
 
-    # pool1 = tf.layers.max_pooling2d(
-    #     inputs=conv1, 
-    #     pool_size=[2, 2], 
-    #     strides=1
-    # )
+y = y - 1
 
-    conv2 = tf.layers.conv2d(
-        inputs=conv1,
-        filters=32,
-        kernel_size=[3, 3],
-        padding="same",
-        activation=tf.nn.relu
-    )
+if __name__ == "__main__":
+    X_train, X_test, y_train, y_test = ms.train_test_split(x, y, test_size=0.1, random_state = 5)
 
-    output = tf.layers.conv2d(
-        inputs=conv2,
-        filters=1,
-        kernel_size=[1, 1],
-        padding="same",
-        activation=tf.nn.relu
-    )
+    print(X_train.shape, y_train.shape)
 
-    predictions = {
-        "solutions": output
-    }
-
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
-
-
-    labels = tf.reshape(labels, [-1, 9, 9, 1])
-    print("######################################")
-    print(output.shape)
-    print(labels.shape)
-    print("#######################################")
-
-    loss = tf.losses.absolute_difference(labels, output)
-
-    if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.AdagradOptimizer(learning_rate=0.001)
-        train_op = optimizer.minimize(
-            loss,
-            global_step=tf.train.get_global_step()
-        )
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
-    
-    eval_metric_ops = {
-        "accuracy": tf.metrics.accuracy(
-            labels=labels, predictions=predictions["solutions"]
-        )
-    }
-
-    return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
-    )
+    model.fit(X_train, y_train, epochs=1)
+    model.evaluate(X_test, y_test, verbose=2)
