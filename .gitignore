@@ -5,3 +5,6 @@ sudoku.csv
 quizzes.npy
 solutions.npy
 model_output/
+model_checkpoints*
+incep_model.h5
+checkpoint
